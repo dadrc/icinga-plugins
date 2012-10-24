@@ -1,0 +1,10 @@
+#!/bin/bash
+export LANG=C
+status=`lpstat -p | grep -oP "printer .* disabled"`
+if [ -z "$status" ]; then
+	echo "No disabled printers."
+	exit 0
+else
+	echo "$status"
+	exit 1
+fi
