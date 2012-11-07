@@ -1,7 +1,15 @@
 #!/bin/bash
+
 function usage {
-echo "Usage: ${0##*/} -p <path> -n <name> -c <critical threshold (in MB)> -w <warning threshold (in MB)>"
+	echo "Usage: ${0##*/} -p <path> -n <name> -c <critical threshold (in MB)> -w <warning threshold (in MB)>"
 }
+
+# Icinga/Nagios return values
+RETURN_CRIT=2
+RETURN_WARN=1
+RETURN_OK=0
+# Script error
+RETURN_ERROR=3
 
 while getopts ":p:c:w:n:" opt; do
 	case $opt in
@@ -20,31 +28,31 @@ while getopts ":p:c:w:n:" opt; do
 		\?)
 			echo "Invalid option -$OPTARG"
 			usage
-			exit 1
+			exit $RETURN_ERROR
 			;;
 		:)
 			echo "Option -$OPTARG requires an argument."
 			usage
-			exit 1
+			exit $RETURN_ERROR
 			;;
 	esac
 done
 
 if [[ -z $path || -z $name || -z $warn || -z $crit ]]; then
 	usage
-	exit 1
+	exit $RETURN_ERROR
 fi
 bytes=$(LANG=C find "$path" -iname "$name" -print0 | du -c --files0-from=- | tail -n1 | cut -f1 -s)
 # > critical
 if [[ $bytes -gt $crit ]]; then
 	echo "CRITIAL: $bytes bytes of files matching '$name' found."
-       	exit 2
+       	exit $RETURN_CRIT
 # > warning
 elif [[ $bytes -gt $warn ]]; then
 	echo "WARNING: $bytes bytes of files matching '$name' found."
-	exit 1
+	exit $RETURN_WARN
 fi
 # < warning
 echo "OK: $bytes bytes of files matching '$name' found."
-exit 0
+exit $RETURN_OK
 
