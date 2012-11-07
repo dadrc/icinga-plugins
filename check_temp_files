@@ -1,6 +1,6 @@
 #!/bin/bash
 function usage {
-	echo "Usage: ${0##*/} -p <path> -n <name> -c <critical threshold> -w <warning threshold>"
+echo "Usage: ${0##*/} -p <path> -n <name> -c <critical threshold (in MB)> -w <warning threshold (in MB)>"
 }
 
 while getopts ":p:c:w:n:" opt; do
@@ -9,10 +9,10 @@ while getopts ":p:c:w:n:" opt; do
 			path=$OPTARG
 			;;
 		c)
-			crit=$OPTARG
+			crit=$(($OPTARG * 1024 * 1024))
 			;;
 		w)
-			warn=$OPTARG
+			warn=$(($OPTARG * 1024 * 1024))
 			;;
 		n)
 			name=$OPTARG
@@ -34,7 +34,6 @@ if [[ -z $path || -z $name || -z $warn || -z $crit ]]; then
 	usage
 	exit 1
 fi
-
 bytes=$(LANG=C find "$path" -iname "$name" -print0 | du -c --files0-from=- | tail -n1 | cut -f1 -s)
 # > critical
 if [[ $bytes -gt $crit ]]; then
