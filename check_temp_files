@@ -42,7 +42,7 @@ if [[ -z $path || -z $name || -z $warn || -z $crit ]]; then
 	usage
 	exit $RETURN_ERROR
 fi
-bytes=$(LANG=C find "$path" -iname "$name" -print0 | du -c --files0-from=- | tail -n1 | cut -f1 -s)
+bytes=$(LANG=C find "$path" -iname "$name" -print0 | LANG=C du -c --files0-from=- | tail -n1 | cut -f1 -s)
 # > critical
 if [[ $bytes -gt $crit ]]; then
 	echo "CRITIAL: $bytes bytes of files matching '$name' found."
