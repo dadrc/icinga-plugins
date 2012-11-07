@@ -1,0 +1,51 @@
+#!/bin/bash
+function usage {
+	echo "Usage: ${0##*/} -p <path> -n <name> -c <critical threshold> -w <warning threshold>"
+}
+
+while getopts ":p:c:w:n:" opt; do
+	case $opt in
+		p)
+			path=$OPTARG
+			;;
+		c)
+			crit=$OPTARG
+			;;
+		w)
+			warn=$OPTARG
+			;;
+		n)
+			name=$OPTARG
+			;;
+		\?)
+			echo "Invalid option -$OPTARG"
+			usage
+			exit 1
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument."
+			usage
+			exit 1
+			;;
+	esac
+done
+
+if [[ -z $path || -z $name || -z $warn || -z $crit ]]; then
+	usage
+	exit 1
+fi
+
+bytes=$(LANG=C find "$path" -iname "$name" -print0 | du -c --files0-from=- | tail -n1 | cut -f1 -s)
+# > critical
+if [[ $bytes -gt $crit ]]; then
+	echo "CRITIAL: $bytes bytes of files matching '$name' found."
+       	exit 2
+# > warning
+elif [[ $bytes -gt $warn ]]; then
+	echo "WARNING: $bytes bytes of files matching '$name' found."
+	exit 1
+fi
+# < warning
+echo "OK: $bytes bytes of files matching '$name' found."
+exit 0
+
