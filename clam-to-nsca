@@ -1,0 +1,23 @@
+#!/bin/bash
+if [[ -z "$1" ]]; then
+	echo "No path given"
+	exit 1
+fi
+
+output=$(clamscan --infected --recursive "$1")
+result=$?
+hostname=$(cat /etc/hostname)
+if [[ "$1" = "/share" ]]; then name="Share"
+elif [[ "$1" = "/home" ]]; then name="Home"
+else name="Virus"; fi
+	
+checkname="$name scan"
+
+if [[ $result -eq 0 ]]; then
+	echo -e "$hostname\t$checkname\t0\tOK: all files in $1 clean.\n" | /usr/sbin/send_nsca -H monitor
+elif [[ $result -eq 2 ]]; then
+	echo -e "$hostname\t$checkname\t1\tERROR: clamscan could not finish.\n" | /usr/sbin/send_nsca -H monitor
+else 
+	echo -e "$hostname\t$checkname\t2\tERROR: $output\n" | /usr/sbin/send_nsca -H monitor
+fi
+
